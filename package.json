@@ -1,0 +1,33 @@
+{
+  "name": "ramsay",
+  "version": "1.0.0",
+  "description": "Simple API for Redux Reducers",
+  "main": "./lib/index.js",
+  "repository": "https://github.com/darnfish/ramsay",
+  "author": "William Gibson <william@darn.fish>",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:dev": "tsc-watch --onSuccess \"yarn test\" --compiler typescript/bin/tsc",
+    "lint": "eslint src --ext .ts,.json",
+    "lint:fix": "yarn lint --fix"
+  },
+  "dependencies": {
+    "pluralize": "^8.0.0",
+    "redux": "^4.2.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.0.2",
+    "@types/node": "^18.7.14",
+    "@types/pluralize": "^0.0.29",
+    "@types/redux": "^3.6.0",
+    "@typescript-eslint/eslint-plugin": "^5.36.1",
+    "@typescript-eslint/parser": "^5.36.1",
+    "eslint": "^8.23.0",
+    "jest": "^29.0.3",
+    "ts-jest": "^29.0.1",
+    "tsc-watch": "^5.0.3",
+    "typescript": "^4.8.2"
+  }
+}
