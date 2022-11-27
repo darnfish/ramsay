@@ -45,4 +45,4 @@ console.log(store) // {}
 ```
 
 ## License
-?
+MIT
