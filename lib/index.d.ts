@@ -28,7 +28,7 @@ export default class Ramsay<O extends {
         type: string;
         options: RamsayTransformOptions;
     };
-    createOneMethod(): (object: O, options?: RamsayTransformOptions) => {
+    createUpdateMethod(): (object: O, options?: RamsayTransformOptions) => {
         [x: string]: string | RamsayTransformOptions | O;
         type: string;
         options: RamsayTransformOptions;
@@ -38,7 +38,7 @@ export default class Ramsay<O extends {
         type: string;
         options: RamsayTransformOptions;
     };
-    createManyMethod(): (objects: O[], options?: RamsayTransformOptions) => {
+    createUpdateManyMethod(): (objects: O[], options?: RamsayTransformOptions) => {
         [x: string]: string | RamsayTransformOptions | O[];
         type: string;
         options: RamsayTransformOptions;

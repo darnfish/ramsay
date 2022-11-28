@@ -48,7 +48,7 @@ export default class Ramsay<O extends { id: I }, I extends RamsayId> {
 		}
 	}
 
-	createOneMethod() {
+	createUpdateMethod() {
 		return (object: O, options: RamsayTransformOptions = {}) => this.update(object, options)
 	}
 
@@ -60,7 +60,7 @@ export default class Ramsay<O extends { id: I }, I extends RamsayId> {
 		}
 	}
 
-	createManyMethod() {
+	createUpdateManyMethod() {
 		return (objects: O[], options: RamsayTransformOptions = {}) => this.updateMany(objects, options)
 	}
 
