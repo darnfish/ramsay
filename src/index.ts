@@ -1,19 +1,21 @@
 import { AnyAction } from 'redux'
 import { plural, singular } from 'pluralize'
 
-export type RamsayId = string | number | symbol
+// Ramsay
+export type TSObjectKey = string | number | symbol
 
-export type RamsayState<O, I extends RamsayId> = {
+export type RamsayState<O extends { [key in I]: T }, I extends TSObjectKey = 'id', T = O[I]> = {
 	[key in I]: O
 }
 
-export interface RamsayAction extends AnyAction {
-	options: RamsayTransformOptions
+export interface RamsayAction<O> extends AnyAction {
+	options: RamsayTransformOptions<O>
 }
 
-type RamsayReducer<O, I extends RamsayId> = (state: RamsayState<O, I>, action: RamsayAction) => RamsayState<O, I>
+type RamsayReducer<O extends { [key in I]: T }, I extends TSObjectKey = 'id', T = O[I]> = (state: RamsayState<O, I>, action: RamsayAction<O>) => RamsayState<O, I>
 
-export interface RamsayTransformOptions {
+export interface RamsayTransformOptions<O> {
+	mapObject?: (object: O, index?: number) => any
   mergeBaseState?: boolean
   mergeObjectState?: boolean
 }
@@ -23,24 +25,38 @@ export interface RamsayPluralOverride {
 	singular?: string
 }
 
-export default class Ramsay<O extends { id: I }, I extends RamsayId> {
+interface RamsayOptions<O extends { [key in I]: T }, I extends TSObjectKey = 'id', T = O[I]>{
+	idKey?: TSObjectKey
+
+	plurals?: RamsayPluralOverride
+	extendReducers?: RamsayReducer<O, I>
+}
+
+export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey = 'id', T = O[I]> {
 	modelName: string
+	
+	idKey?: TSObjectKey
 	extendReducers?: RamsayReducer<O, I>
 
 	pluralOverride?: string
 	singularOverride?: string
 	
-	constructor(modelName: string, extendReducers?: RamsayReducer<O, I>, plurals?: RamsayPluralOverride) {
+	constructor(modelName: string, options: RamsayOptions<O, I> = {}) {
 		this.modelName = modelName
-		this.extendReducers = extendReducers
 
-		if(plurals) {
-			this.pluralOverride = plurals.plural
-			this.singularOverride = plurals.singular
+		this.idKey = options?.idKey || 'id'
+		this.extendReducers = options?.extendReducers
+
+		if(options?.plurals) {
+			this.pluralOverride = options.plurals.plural
+			this.singularOverride = options.plurals.singular
 		}
 	}
 
-	update(object: O, options: RamsayTransformOptions = {}) {
+	update(object: O, options: RamsayTransformOptions<O> = {}) {
+		if(options.mapObject)
+			object = options.mapObject(object)
+
 		return {
 			type: `${this.actionTypeName}/HANDLE`,
 			[this.singularObjectName]: object,
@@ -49,10 +65,13 @@ export default class Ramsay<O extends { id: I }, I extends RamsayId> {
 	}
 
 	createUpdateMethod() {
-		return (object: O, options: RamsayTransformOptions = {}) => this.update(object, options)
+		return (object: O, options: RamsayTransformOptions<O> = {}) => this.update(object, options)
 	}
 
-	updateMany(objects: O[], options: RamsayTransformOptions = {}) {
+	updateMany(objects: O[], options: RamsayTransformOptions<O> = {}) {
+		if(options.mapObject)
+			objects = objects.map(options.mapObject)
+
 		return {
 			type: `${this.actionTypeName}/HANDLE_MANY`,
 			[this.pluralObjectName]: objects,
@@ -61,7 +80,7 @@ export default class Ramsay<O extends { id: I }, I extends RamsayId> {
 	}
 
 	createUpdateManyMethod() {
-		return (objects: O[], options: RamsayTransformOptions = {}) => this.updateMany(objects, options)
+		return (objects: O[], options: RamsayTransformOptions<O> = {}) => this.updateMany(objects, options)
 	}
 
 	remove(objectId: string) {
@@ -89,15 +108,15 @@ export default class Ramsay<O extends { id: I }, I extends RamsayId> {
 	createReducer() {
 		const BASE_STATE = {} as RamsayState<O, I>
 
-		const update = (_object: O, options: RamsayTransformOptions, state: RamsayState<O, I>): RamsayState<O, I> => {
+		const update = (_object: O, options: RamsayTransformOptions<O>, state: RamsayState<O, I>): RamsayState<O, I> => {
 			const mergeBaseState = options?.mergeBaseState !== false
 			const mergeObjectState = options?.mergeObjectState !== false
 
-			const oldObject = mergeObjectState ? state[_object.id] : null
+			const oldObject = mergeObjectState ? state[_object[this.idKey]] : null
 			if(oldObject)
 				return {
 					...state,
-					[_object.id]: {
+					[_object[this.idKey]]: {
 						...oldObject,
 						..._object
 					}
@@ -105,24 +124,24 @@ export default class Ramsay<O extends { id: I }, I extends RamsayId> {
 		
 			return {
 				...(mergeBaseState ? state : BASE_STATE),
-				[_object.id]: _object
+				[_object[this.idKey]]: _object
 			}
 		}
 
-		const updateMany = (_objects: O[], options: RamsayTransformOptions, state: RamsayState<O, I>): RamsayState<O, I> => {
+		const updateMany = (_objects: O[], options: RamsayTransformOptions<O>, state: RamsayState<O, I>): RamsayState<O, I> => {
 			const mergeBaseState = options?.mergeBaseState !== false
 			const mergeObjectState = options?.mergeObjectState !== false
 
 			const objects = { ...BASE_STATE }
 			_objects.forEach(object => {
-				const oldInstitution = mergeObjectState ? state[object.id] : null
+				const oldInstitution = mergeObjectState ? state[object[this.idKey]] : null
 				if(oldInstitution)
-					return objects[object.id] = {
+					return objects[object[this.idKey]] = {
 						...oldInstitution,
 						...object
 					}
 		
-				objects[object.id] = object
+				objects[object[this.idKey]] = object
 			})
 		
 			return {
@@ -146,7 +165,7 @@ export default class Ramsay<O extends { id: I }, I extends RamsayId> {
 			return newState
 		}
 
-		return (state = BASE_STATE, action: RamsayAction) => {
+		return (state = BASE_STATE, action: RamsayAction<O>) => {
 			switch(action.type) {
 			case 'RESET':
 				return BASE_STATE

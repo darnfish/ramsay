@@ -13,11 +13,16 @@ yarn add ramsay
 import Ramsay from 'ramsay'
 
 interface User {
-	id: number
+	id: string
 	name: string
 }
 
 const users = new Ramsay<User>('users') // for non-TS users: const users = new Ramsay('users')
+
+/**
+ * If you have a different field for your object id, or a different type (default is string):
+ * new Ramsay<{ _id: number }, '_id'>('users', { idKey: '_id' })
+ **/
 
 // This is your reducer
 const reducer = users.createReducer()
