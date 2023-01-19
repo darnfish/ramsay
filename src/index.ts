@@ -64,8 +64,8 @@ export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey =
 		}
 	}
 
-	createUpdateMethod() {
-		return (object: O, options: RamsayTransformOptions<O> = {}) => this.update(object, options)
+	createUpdateMethod(defaultOptions: RamsayTransformOptions<O> = {}) {
+		return (object: O, options: RamsayTransformOptions<O> = {}) => this.update(object, { ...defaultOptions, ...options })
 	}
 
 	updateMany(objects: O[], options: RamsayTransformOptions<O> = {}) {
@@ -79,8 +79,8 @@ export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey =
 		}
 	}
 
-	createUpdateManyMethod() {
-		return (objects: O[], options: RamsayTransformOptions<O> = {}) => this.updateMany(objects, options)
+	createUpdateManyMethod(defaultOptions: RamsayTransformOptions<O> = {}) {
+		return (objects: O[], options: RamsayTransformOptions<O> = {}) => this.updateMany(objects, { ...defaultOptions, ...options })
 	}
 
 	remove(objectId: string) {
