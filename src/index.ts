@@ -12,7 +12,7 @@ export interface RamsayAction<O> extends AnyAction {
 	options: RamsayTransformOptions<O>
 }
 
-type RamsayReducer<O extends { [key in I]: T }, I extends TSObjectKey = 'id', T = O[I]> = (state: RamsayState<O, I>, action: RamsayAction<O>) => RamsayState<O, I>
+type RamsayReducer<O extends { [key in I]: T }, I extends TSObjectKey = 'id', T = O[I]> = (state: RamsayState<O, I>, action: RamsayAction<O>, prefix?: string) => RamsayState<O, I>
 
 export interface RamsayTransformOptions<O> {
 	mapObject?: (object: O, index?: number) => any
@@ -27,16 +27,16 @@ export interface RamsayPluralOverride {
 
 interface RamsayOptions<O extends { [key in I]: T }, I extends TSObjectKey = 'id', T = O[I]>{
 	idKey?: TSObjectKey
+	disableResetAction?: boolean
 
 	plurals?: RamsayPluralOverride
-	extendReducers?: RamsayReducer<O, I>
 }
 
 export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey = 'id', T = O[I]> {
 	modelName: string
 	
 	idKey?: TSObjectKey
-	extendReducers?: RamsayReducer<O, I>
+	disableResetAction?: boolean
 
 	pluralOverride?: string
 	singularOverride?: string
@@ -45,7 +45,7 @@ export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey =
 		this.modelName = modelName
 
 		this.idKey = options?.idKey || 'id'
-		this.extendReducers = options?.extendReducers
+		this.disableResetAction = options?.disableResetAction || false
 
 		if(options?.plurals) {
 			this.pluralOverride = options.plurals.plural
@@ -105,7 +105,7 @@ export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey =
 		return (objectIds: string[]) => this.removeMany(objectIds)
 	}
 
-	createReducer() {
+	createReducer(extend?: RamsayReducer<O, I>) {
 		const BASE_STATE = {} as RamsayState<O, I>
 
 		const update = (_object: O, options: RamsayTransformOptions<O>, state: RamsayState<O, I>): RamsayState<O, I> => {
@@ -166,9 +166,15 @@ export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey =
 		}
 
 		return (state = BASE_STATE, action: RamsayAction<O>) => {
+			if(!this.disableResetAction)
+				switch(action.type) {
+				case 'RESET':
+					return BASE_STATE
+				default:
+					break
+				}
+
 			switch(action.type) {
-			case 'RESET':
-				return BASE_STATE
 			case `${this.actionTypeName}/HANDLE`:
 				return update(action[this.singularObjectName], action.options, state)
 			case `${this.actionTypeName}/HANDLE_MANY`:
@@ -178,8 +184,8 @@ export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey =
 			case `${this.actionTypeName}/REMOVE_MANY`:
 				return removeMany(action[`${this.pluralObjectName}Ids`], state)
 			default:
-				if(this.extendReducers)
-					return this.extendReducers(state, action)
+				if(extend)
+					return extend(state, action, this.actionTypeName) || state
 
 				return state
 			}

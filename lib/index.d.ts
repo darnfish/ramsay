@@ -10,7 +10,7 @@ export interface RamsayAction<O> extends AnyAction {
 }
 declare type RamsayReducer<O extends {
     [key in I]: T;
-}, I extends TSObjectKey = 'id', T = O[I]> = (state: RamsayState<O, I>, action: RamsayAction<O>) => RamsayState<O, I>;
+}, I extends TSObjectKey = 'id', T = O[I]> = (state: RamsayState<O, I>, action: RamsayAction<O>, prefix?: string) => RamsayState<O, I>;
 export interface RamsayTransformOptions<O> {
     mapObject?: (object: O, index?: number) => any;
     mergeBaseState?: boolean;
@@ -24,15 +24,15 @@ interface RamsayOptions<O extends {
     [key in I]: T;
 }, I extends TSObjectKey = 'id', T = O[I]> {
     idKey?: TSObjectKey;
+    disableResetAction?: boolean;
     plurals?: RamsayPluralOverride;
-    extendReducers?: RamsayReducer<O, I>;
 }
 export default class Ramsay<O extends {
     [key in I]: T;
 }, I extends TSObjectKey = 'id', T = O[I]> {
     modelName: string;
     idKey?: TSObjectKey;
-    extendReducers?: RamsayReducer<O, I>;
+    disableResetAction?: boolean;
     pluralOverride?: string;
     singularOverride?: string;
     constructor(modelName: string, options?: RamsayOptions<O, I>);
@@ -41,7 +41,7 @@ export default class Ramsay<O extends {
         type: string;
         options: RamsayTransformOptions<O>;
     };
-    createUpdateMethod(): (object: O, options?: RamsayTransformOptions<O>) => {
+    createUpdateMethod(defaultOptions?: RamsayTransformOptions<O>): (object: O, options?: RamsayTransformOptions<O>) => {
         [x: string]: string | O | RamsayTransformOptions<O>;
         type: string;
         options: RamsayTransformOptions<O>;
@@ -51,7 +51,7 @@ export default class Ramsay<O extends {
         type: string;
         options: RamsayTransformOptions<O>;
     };
-    createUpdateManyMethod(): (objects: O[], options?: RamsayTransformOptions<O>) => {
+    createUpdateManyMethod(defaultOptions?: RamsayTransformOptions<O>): (objects: O[], options?: RamsayTransformOptions<O>) => {
         [x: string]: string | RamsayTransformOptions<O> | O[];
         type: string;
         options: RamsayTransformOptions<O>;
@@ -72,7 +72,7 @@ export default class Ramsay<O extends {
         [x: string]: string | string[];
         type: string;
     };
-    createReducer(): (state: RamsayState<O, I, O[I]>, action: RamsayAction<O>) => RamsayState<O, I, O[I]>;
+    createReducer(extend?: RamsayReducer<O, I>): (state: RamsayState<O, I, O[I]>, action: RamsayAction<O>) => RamsayState<O, I, O[I]>;
     private get singularObjectName();
     private get pluralObjectName();
     private get actionTypeName();
