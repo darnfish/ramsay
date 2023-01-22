@@ -82,7 +82,7 @@ const reducer = users.createReducer((state, action, prefix) => {
 
 These additional actions will not take priority over Ramsay's built-in reducers for `update`, `updateMany`, `remove`, and `removeMany`.
 
-## Dispatch Functions
+### Dispatch Functions
 Ramsay can create custom dispatch functions which you can use to avoid importing your reducer. See below:
 ```ts
 const users = new Ramsay('users')
@@ -100,34 +100,6 @@ const updateUsers = users.createUpdateManyMethod({ mapObject: user => ({ ...user
 updateUsers([{ id: 1, name: 'William' }])
 
 // { 1: { id: 1, name: 'William', customChange: 1 } }
-```
-
-### Plural and Singular Overrides
-Ramsay attempts to figure out the singular and plural versions of your model name for internal use. For example:
-```
-users:
-- singular: user
-- plural: users
-
-messages:
-- singular: message
-- plural: messages
-
-eventEnrollments:
-- singular: eventEnrollment
-- plural: eventEnrollments
-```
-
-In some instances, Ramsay can't figure out a singular or plural version of your model name (for instance, `cash`).
-
-You can provide your own custom singular/plural names in the options:
-```ts
-new Ramsay('cash', {
-	plurals: {
-		plural: 'cashes',
-		singular: 'cash'
-	}
-})
 ```
 
 ### Useful Information
