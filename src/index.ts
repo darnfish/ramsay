@@ -162,7 +162,7 @@ export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey =
 			return {
 				...(mergeBaseState ? state : BASE_STATE),
 				[_object[this.idKey]]: {
-					...(oldObject ? oldObject : {}),
+					...(oldObject || {}),
 					..._object
 				}
 			}
@@ -174,10 +174,10 @@ export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey =
 
 			const objects = { ...(mergeBaseState ? state : BASE_STATE) }
 			for(const object of _objects) {
-				const oldInstitution = mergeObjectState ? state[object[this.idKey]] : null
-				if(oldInstitution) {
+				const oldObject = mergeObjectState ? state[object[this.idKey]] : null
+				if(oldObject) {
 					objects[object[this.idKey]] = {
-						...oldInstitution,
+						...(oldObject || {}),
 						...object
 					}
 
