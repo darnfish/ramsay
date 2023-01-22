@@ -125,6 +125,28 @@ export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey =
 						...updatedObject
 					}
 				}
+			},
+			manuallyUpdateAllObjects: (updateFn: (object: O) => Partial<O>) => {
+				const allObjects: O[] = Object.values(state)
+				const updatedObjects = {} as RamsayState<O, I>
+
+				for(const object of allObjects) {
+					const updatedObject = updateFn(object)
+					if(!updatedObject)
+						continue
+
+					const objectId = object[this.idKey]
+
+					updatedObjects[objectId] = {
+						...object,
+						...updatedObject
+					}
+				}
+
+				return {
+					...state,
+					...updatedObjects
+				}
 			}
 		}
 	}

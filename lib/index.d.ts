@@ -74,6 +74,7 @@ export default class Ramsay<O extends {
     };
     withState(state: RamsayState<O, I>): {
         manuallyUpdateObject: (id: T, updateFn: (object?: O) => Partial<O>) => RamsayState<O, I, O[I]>;
+        manuallyUpdateAllObjects: (updateFn: (object: O) => Partial<O>) => RamsayState<O, I, O[I]>;
     };
     createReducer(extend?: RamsayReducer<O, I>): (state: RamsayState<O, I, O[I]>, action: RamsayAction<O>) => RamsayState<O, I, O[I]>;
     private get singularObjectName();
