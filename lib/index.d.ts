@@ -2,15 +2,15 @@ import { AnyAction } from 'redux';
 export declare type TSObjectKey = string | number | symbol;
 export declare type RamsayState<O extends {
     [key in I]: T;
-}, I extends TSObjectKey = 'id', T = O[I]> = {
-    [key in I]: O;
+}, I extends TSObjectKey = 'id', T extends string | number | symbol = O[I]> = {
+    [key in T]: O;
 };
 export interface RamsayAction<O> extends AnyAction {
     options: RamsayTransformOptions<O>;
 }
 declare type RamsayReducer<O extends {
     [key in I]: T;
-}, I extends TSObjectKey = 'id', T = O[I]> = (state: RamsayState<O, I>, action: RamsayAction<O>, prefix?: string) => RamsayState<O, I>;
+}, I extends TSObjectKey = 'id', T extends string | number | symbol = O[I]> = (state: RamsayState<O, I>, action: RamsayAction<O>, prefix?: string) => RamsayState<O, I>;
 export interface RamsayTransformOptions<O> {
     mapObject?: (object: O, index?: number) => any;
     mergeBaseState?: boolean;
@@ -22,14 +22,14 @@ export interface RamsayPluralOverride {
 }
 interface RamsayOptions<O extends {
     [key in I]: T;
-}, I extends TSObjectKey = 'id', T = O[I]> {
+}, I extends TSObjectKey = 'id', T extends string | number | symbol = O[I]> {
     idKey?: TSObjectKey;
     disableResetAction?: boolean;
     plurals?: RamsayPluralOverride;
 }
 export default class Ramsay<O extends {
     [key in I]: T;
-}, I extends TSObjectKey = 'id', T = O[I]> {
+}, I extends TSObjectKey = 'id', T extends string | number | symbol = O[I]> {
     modelName: string;
     idKey?: TSObjectKey;
     disableResetAction?: boolean;
@@ -71,6 +71,9 @@ export default class Ramsay<O extends {
     createRemoveManyMethod(): (objectIds: string[]) => {
         [x: string]: string | string[];
         type: string;
+    };
+    withState(state: RamsayState<O, I>): {
+        manuallyUpdateObject: (id: T, updateFn: (object?: O) => Partial<O>) => RamsayState<O, I, O[I]>;
     };
     createReducer(extend?: RamsayReducer<O, I>): (state: RamsayState<O, I, O[I]>, action: RamsayAction<O>) => RamsayState<O, I, O[I]>;
     private get singularObjectName();

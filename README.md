@@ -75,13 +75,7 @@ You can add your own custom actions ontop of Ramsay using `extend` parameter on 
 const reducer = users.createReducer((state, action, prefix) => {
 	switch(action.type) {
 	case `${PREFIX}/CUSTOM_ACTION`:
-		return {
-			...state,
-			[action.userId]: {
-				...state[action.userId],
-				customChange: 1
-			}
-		}
+		return users.withState(state).manuallyUpdateObject(action.userId, oldUser => ({ counter: oldUser.counter + 1 }))
 	}
 })
 ```

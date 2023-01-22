@@ -4,15 +4,15 @@ import { plural, singular } from 'pluralize'
 // Ramsay
 export type TSObjectKey = string | number | symbol
 
-export type RamsayState<O extends { [key in I]: T }, I extends TSObjectKey = 'id', T = O[I]> = {
-	[key in I]: O
+export type RamsayState<O extends { [key in I]: T }, I extends TSObjectKey = 'id', T extends string | number | symbol = O[I]> = {
+	[key in T]: O
 }
 
 export interface RamsayAction<O> extends AnyAction {
 	options: RamsayTransformOptions<O>
 }
 
-type RamsayReducer<O extends { [key in I]: T }, I extends TSObjectKey = 'id', T = O[I]> = (state: RamsayState<O, I>, action: RamsayAction<O>, prefix?: string) => RamsayState<O, I>
+type RamsayReducer<O extends { [key in I]: T }, I extends TSObjectKey = 'id', T extends string | number | symbol = O[I]> = (state: RamsayState<O, I>, action: RamsayAction<O>, prefix?: string) => RamsayState<O, I>
 
 export interface RamsayTransformOptions<O> {
 	mapObject?: (object: O, index?: number) => any
@@ -25,14 +25,14 @@ export interface RamsayPluralOverride {
 	singular?: string
 }
 
-interface RamsayOptions<O extends { [key in I]: T }, I extends TSObjectKey = 'id', T = O[I]>{
+interface RamsayOptions<O extends { [key in I]: T }, I extends TSObjectKey = 'id', T extends string | number | symbol = O[I]>{
 	idKey?: TSObjectKey
 	disableResetAction?: boolean
 
 	plurals?: RamsayPluralOverride
 }
 
-export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey = 'id', T = O[I]> {
+export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey = 'id', T extends string | number | symbol = O[I]> {
 	modelName: string
 	
 	idKey?: TSObjectKey
@@ -103,6 +103,30 @@ export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey =
 
 	createRemoveManyMethod() {
 		return (objectIds: string[]) => this.removeMany(objectIds)
+	}
+
+	withState(state: RamsayState<O, I>) {
+		return {
+			manuallyUpdateObject: (id: T, updateFn: (object?: O) => Partial<O>) => {
+				// Find existing object
+				const existingObject = state[id.toString()] ? { ...state[id.toString()] } : null
+				if(!existingObject)
+					return state
+
+				// Update object
+				const updatedObject = updateFn(existingObject)
+				if(!updatedObject)
+					return state
+
+				return {
+					...state,
+					[id]: {
+						...existingObject,
+						...updatedObject
+					}
+				}
+			}
+		}
 	}
 
 	createReducer(extend?: RamsayReducer<O, I>) {
