@@ -102,6 +102,34 @@ updateUsers([{ id: 1, name: 'William' }])
 // { 1: { id: 1, name: 'William', customChange: 1 } }
 ```
 
+### Plural and Singular Overrides
+Ramsay attempts to figure out the singular and plural versions of your model name for internal use. For example:
+```
+users:
+- singular: user
+- plural: users
+
+messages:
+- singular: message
+- plural: messages
+
+eventEnrollments:
+- singular: eventEnrollment
+- plural: eventEnrollments
+```
+
+In some instances, Ramsay can't figure out a singular or plural version of your model name (for instance, `cash`).
+
+You can provide your own custom singular/plural names in the options:
+```ts
+new Ramsay('cash', {
+	plurals: {
+		plural: 'cashes',
+		singular: 'cash'
+	}
+})
+```
+
 ### Useful Information
 * By default, an action with the type `RESET` will reset the state to a default empty object (`{}`). You can disable this functionality by setting `options.disableResetAction` to `true` in your initial config (e.g. `new Ramsay('users', { disableResetAction: true })`)
 

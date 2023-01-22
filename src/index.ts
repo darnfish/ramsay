@@ -1,4 +1,5 @@
 import { AnyAction } from 'redux'
+import { plural, singular } from 'pluralize'
 
 // Ramsay
 export type TSObjectKey = string | number | symbol
@@ -17,11 +18,17 @@ export interface RamsayTransformOptions<O> {
 	mapObject?: (object: O, index?: number) => any
 	mergeBaseState?: boolean
 	mergeObjectState?: boolean
+
+export interface RamsayPluralOverride {
+	plural?: string
+	singular?: string
 }
 
 interface RamsayOptions<O extends { [key in I]: T }, I extends TSObjectKey = 'id', T extends string | number | symbol = O[I]>{
 	idKey?: TSObjectKey
 	disableResetAction?: boolean
+
+	plurals?: RamsayPluralOverride
 }
 
 export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey = 'id', T extends string | number | symbol = O[I]> {
@@ -38,6 +45,11 @@ export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey =
 
 		this.idKey = options?.idKey || 'id'
 		this.disableResetAction = options?.disableResetAction || false
+
+		if(options?.plurals) {
+			this.pluralOverride = options.plurals.plural
+			this.singularOverride = options.plurals.singular
+		}
 	}
 
 	update(object: O, options: RamsayTransformOptions<O> = {}) {
@@ -46,7 +58,7 @@ export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey =
 
 		return {
 			type: `${this.actionTypeName}/HANDLE`,
-			object,
+			[this.singularObjectName]: object,
 			options
 		}
 	}
@@ -61,7 +73,7 @@ export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey =
 
 		return {
 			type: `${this.actionTypeName}/HANDLE_MANY`,
-			objects,
+			[this.pluralObjectName]: objects,
 			options
 		}
 	}
@@ -73,7 +85,7 @@ export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey =
 	remove(objectId: string) {
 		return {
 			type: `${this.actionTypeName}/REMOVE`,
-			objectId
+			[`${this.pluralObjectName}Id`]: objectId
 		}
 	}
 
@@ -84,7 +96,7 @@ export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey =
 	removeMany(objectIds: string[]) {
 		return {
 			type: `${this.actionTypeName}/REMOVE_MANY`,
-			objectIds
+			[`${this.pluralObjectName}Ids`]: objectIds
 		}
 	}
 
@@ -204,13 +216,13 @@ export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey =
 
 			switch(action.type) {
 			case `${this.actionTypeName}/HANDLE`:
-				return update(action.object, action.options, state)
+				return update(action[this.singularObjectName], action.options, state)
 			case `${this.actionTypeName}/HANDLE_MANY`:
-				return updateMany(action.objects, action.options, state)
+				return updateMany(action[this.pluralObjectName], action.options, state)
 			case `${this.actionTypeName}/REMOVE`:
-				return remove(action.objectId, state)
+				return remove(action[`${this.pluralObjectName}Id`], state)
 			case `${this.actionTypeName}/REMOVE_MANY`:
-				return removeMany(action.objectIds, state)
+				return removeMany(action[`${this.pluralObjectName}Ids`], state)
 			default:
 				if(extend)
 					return extend(state, action, this.actionTypeName) || state
@@ -220,7 +232,15 @@ export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey =
 		}
 	}
 
+	private get singularObjectName() {
+		return this.singularOverride || singular(this.modelName)
+	}
+
+	private get pluralObjectName() {
+		return this.pluralOverride || plural(this.modelName)
+	}
+
 	private get actionTypeName() {
-		return this.modelName.toUpperCase()
+		return this.singularObjectName.toUpperCase()
 	}
 }
