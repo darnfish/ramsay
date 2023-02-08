@@ -72,11 +72,15 @@ export default class Ramsay<O extends {
         [x: string]: string | string[];
         type: string;
     };
-    withState(state: RamsayState<O, I>): {
+    withState(_state: RamsayState<O, I>): {
         manuallyUpdateObject: (id: T, updateFn: (object?: O) => Partial<O>) => RamsayState<O, I, O[I]>;
         manuallyUpdateAllObjects: (updateFn: (object: O) => Partial<O>) => RamsayState<O, I, O[I]>;
+        manuallyRemoveObject: (id: T) => RamsayState<O, I, O[I]>;
+        manuallyRemoveObjects: (ids: T[]) => RamsayState<O, I, O[I]>;
+        manuallyRemoveObjectsByEvaluation: (evaluatorFn: (object: O) => boolean) => RamsayState<O, I, O[I]>;
+        manuallyRemoveAllObjects: () => {};
     };
-    createReducer(extend?: RamsayReducer<O, I>): (state: RamsayState<O, I, O[I]>, action: RamsayAction<O>) => RamsayState<O, I, O[I]>;
+    createReducer(extend?: RamsayReducer<O, I>): (_state: RamsayState<O, I, O[I]>, action: RamsayAction<O>) => RamsayState<O, I, O[I]>;
     private get singularObjectName();
     private get pluralObjectName();
     private get actionTypeName();

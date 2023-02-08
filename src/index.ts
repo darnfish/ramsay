@@ -18,6 +18,7 @@ export interface RamsayTransformOptions<O> {
 	mapObject?: (object: O, index?: number) => any
 	mergeBaseState?: boolean
 	mergeObjectState?: boolean
+}
 
 export interface RamsayPluralOverride {
 	plural?: string
@@ -104,11 +105,13 @@ export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey =
 		return (objectIds: string[]) => this.removeMany(objectIds)
 	}
 
-	withState(state: RamsayState<O, I>) {
+	withState(_state: RamsayState<O, I>) {
+		const state = structuredClone(_state)
+
 		return {
 			manuallyUpdateObject: (id: T, updateFn: (object?: O) => Partial<O>) => {
 				// Find existing object
-				const existingObject = state[id.toString()] ? { ...state[id.toString()] } : null
+				const existingObject = state[id.toString()] || null
 				if(!existingObject)
 					return state
 
@@ -146,6 +149,33 @@ export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey =
 					...state,
 					...updatedObjects
 				}
+			},
+			manuallyRemoveObject: (id: T) => {
+				delete state[id as string]
+
+				return state
+			},
+			manuallyRemoveObjects: (ids: T[]) => {
+				for(const id of ids)
+					delete state[id as string]
+
+				return state
+			},
+			manuallyRemoveObjectsByEvaluation: (evaluatorFn: (object: O) => boolean) => {
+				const allObjects: O[] = Object.values(state)
+				
+				const objectsToRemove = allObjects.filter(evaluatorFn)
+				if(objectsToRemove.length === 0)
+					return state
+
+				const objectIdsToRemove = objectsToRemove.map(object => object[this.idKey])
+				for(const objectId of objectIdsToRemove)
+					delete state[objectId]
+
+				return state
+			},
+			manuallyRemoveAllObjects: () => {
+				return {}
 			}
 		}
 	}
@@ -205,7 +235,9 @@ export default class Ramsay<O extends { [key in I]: T }, I extends TSObjectKey =
 			return newState
 		}
 
-		return (state = BASE_STATE, action: RamsayAction<O>) => {
+		return (_state = BASE_STATE, action: RamsayAction<O>) => {
+			const state = structuredClone(_state)
+
 			if(!this.disableResetAction)
 				switch(action.type) {
 				case 'RESET':
